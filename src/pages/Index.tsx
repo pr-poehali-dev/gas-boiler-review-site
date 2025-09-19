@@ -78,6 +78,7 @@ export default function Index() {
     { id: 'main', label: 'Главная', icon: 'Home' },
     { id: 'catalog', label: 'Каталог', icon: 'Package' },
     { id: 'reviews', label: 'Отзывы', icon: 'MessageSquare' },
+    { id: 'calculator', label: 'Калькулятор', icon: 'Calculator' },
     { id: 'about', label: 'О компании', icon: 'Building' },
     { id: 'service', label: 'Сервис', icon: 'Wrench' },
     { id: 'contacts', label: 'Контакты', icon: 'Phone' }
@@ -434,11 +435,151 @@ export default function Index() {
     </div>
   );
 
+  const CalculatorSection = () => (
+    <div className="container mx-auto px-4 py-16">
+      <h1 className="text-4xl font-bold mb-8">Калькулятор мощности котла</h1>
+      <div className="grid md:grid-cols-2 gap-12">
+        <Card className="p-6">
+          <CardHeader>
+            <CardTitle>Подбор котла по площади</CardTitle>
+            <CardDescription>
+              Введите параметры вашего дома для расчета необходимой мощности
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium mb-2">Площадь дома (м²)</label>
+              <input 
+                type="number" 
+                className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary" 
+                placeholder="150" 
+                id="area"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium mb-2">Высота потолков (м)</label>
+              <input 
+                type="number" 
+                step="0.1"
+                className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary" 
+                placeholder="2.7" 
+                id="height"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium mb-2">Тип дома</label>
+              <select className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary" id="houseType">
+                <option value="1">Хорошо утепленный</option>
+                <option value="1.2">Средняя теплоизоляция</option>
+                <option value="1.5">Слабая теплоизоляция</option>
+                <option value="2">Без утепления</option>
+              </select>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium mb-2">Регион</label>
+              <select className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary" id="region">
+                <option value="1">Южные регионы</option>
+                <option value="1.2">Центральная Россия</option>
+                <option value="1.5">Северные регионы</option>
+                <option value="1.8">Крайний Север</option>
+              </select>
+            </div>
+            
+            <Button 
+              className="w-full" 
+              onClick={() => {
+                const area = parseFloat((document.getElementById('area') as HTMLInputElement).value);
+                const height = parseFloat((document.getElementById('height') as HTMLInputElement).value);
+                const houseType = parseFloat((document.getElementById('houseType') as HTMLSelectElement).value);
+                const region = parseFloat((document.getElementById('region') as HTMLSelectElement).value);
+                
+                if (area && height) {
+                  const power = (area * height * 0.04 * houseType * region).toFixed(1);
+                  const resultDiv = document.getElementById('result');
+                  if (resultDiv) {
+                    resultDiv.innerHTML = `
+                      <div class="bg-primary/10 p-4 rounded-lg">
+                        <h3 class="font-semibold text-primary mb-2">Рекомендуемая мощность: ${power} кВт</h3>
+                        <p class="text-sm text-gray-600">Добавьте 15-20% запаса для горячего водоснабжения</p>
+                      </div>
+                    `;
+                  }
+                }
+              }}
+            >
+              <Icon name="Calculator" size={16} className="mr-2" />
+              Рассчитать мощность
+            </Button>
+            
+            <div id="result"></div>
+          </CardContent>
+        </Card>
+        
+        <div className="space-y-6">
+          <Card className="p-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-3">
+                <Icon name="Info" className="text-primary" />
+                Как выбрать котел?
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-3 text-sm text-gray-700">
+                <li className="flex items-start gap-2">
+                  <Icon name="CheckCircle" size={16} className="text-green-600 mt-0.5" />
+                  <span>Мощность котла должна соответствовать теплопотерям дома</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <Icon name="CheckCircle" size={16} className="text-green-600 mt-0.5" />
+                  <span>Конденсационные котлы экономят до 15% газа</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <Icon name="CheckCircle" size={16} className="text-green-600 mt-0.5" />
+                  <span>Для ГВС добавьте 20% к расчетной мощности</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <Icon name="CheckCircle" size={16} className="text-green-600 mt-0.5" />
+                  <span>Настенные котлы подходят для домов до 200 м²</span>
+                </li>
+              </ul>
+            </CardContent>
+          </Card>
+          
+          <Card className="p-6">
+            <CardHeader>
+              <CardTitle>Популярные мощности</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                  <span className="font-medium">18 кВт</span>
+                  <span className="text-sm text-gray-600">До 180 м²</span>
+                </div>
+                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                  <span className="font-medium">24 кВт</span>
+                  <span className="text-sm text-gray-600">До 240 м²</span>
+                </div>
+                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                  <span className="font-medium">30 кВт</span>
+                  <span className="text-sm text-gray-600">До 300 м²</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+
   const renderContent = () => {
     switch (activeSection) {
       case 'main': return <MainSection />;
       case 'catalog': return <CatalogSection />;
       case 'reviews': return <ReviewsSection />;
+      case 'calculator': return <CalculatorSection />;
       case 'about': return <AboutSection />;
       case 'service': return <ServiceSection />;
       case 'contacts': return <ContactsSection />;
@@ -473,10 +614,46 @@ export default function Index() {
             </nav>
             
             <div className="flex items-center gap-3">
-              <Button variant="outline" size="sm" onClick={() => setActiveSection('contacts')}>
+              <Button variant="outline" size="sm" onClick={() => setActiveSection('contacts')} className="hidden sm:flex">
                 <Icon name="Phone" size={16} className="mr-2" />
                 +7 (495) 123-45-67
               </Button>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="md:hidden"
+                onClick={() => {
+                  const menu = document.getElementById('mobile-menu');
+                  if (menu) {
+                    menu.classList.toggle('hidden');
+                  }
+                }}
+              >
+                <Icon name="Menu" size={20} />
+              </Button>
+            </div>
+          </div>
+        </div>
+        
+        {/* Mobile Menu */}
+        <div id="mobile-menu" className="md:hidden hidden bg-white border-t shadow-lg">
+          <div className="container mx-auto p-4">
+            <div className="grid grid-cols-2 gap-3">
+              {navigation.map((item) => (
+                <Button
+                  key={item.id}
+                  variant={activeSection === item.id ? "default" : "outline"}
+                  onClick={() => {
+                    setActiveSection(item.id);
+                    const menu = document.getElementById('mobile-menu');
+                    if (menu) menu.classList.add('hidden');
+                  }}
+                  className="flex flex-col items-center gap-2 h-20 text-sm"
+                >
+                  <Icon name={item.icon as any} size={24} />
+                  {item.label}
+                </Button>
+              ))}
             </div>
           </div>
         </div>
