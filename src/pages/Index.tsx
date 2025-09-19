@@ -5,8 +5,60 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import Icon from '@/components/ui/icon';
 
+interface CartItem {
+  id: string;
+  name: string;
+  price: number;
+  image: string;
+  quantity: number;
+}
+
 export default function Index() {
   const [activeSection, setActiveSection] = useState('main');
+  const [cart, setCart] = useState<CartItem[]>([]);
+  const [isCartOpen, setIsCartOpen] = useState(false);
+
+  const addToCart = (boiler: any) => {
+    const existingItem = cart.find(item => item.id === boiler.id.toString());
+    
+    if (existingItem) {
+      setCart(cart.map(item => 
+        item.id === boiler.id.toString() 
+          ? { ...item, quantity: item.quantity + 1 }
+          : item
+      ));
+    } else {
+      setCart([...cart, {
+        id: boiler.id.toString(),
+        name: boiler.name,
+        price: parseInt(boiler.price.replace(/[^\d]/g, '')),
+        image: boiler.image,
+        quantity: 1
+      }]);
+    }
+  };
+
+  const removeFromCart = (id: string) => {
+    setCart(cart.filter(item => item.id !== id));
+  };
+
+  const updateQuantity = (id: string, quantity: number) => {
+    if (quantity <= 0) {
+      removeFromCart(id);
+    } else {
+      setCart(cart.map(item => 
+        item.id === id ? { ...item, quantity } : item
+      ));
+    }
+  };
+
+  const getTotalItems = () => {
+    return cart.reduce((total, item) => total + item.quantity, 0);
+  };
+
+  const getTotalPrice = () => {
+    return cart.reduce((total, item) => total + (item.price * item.quantity), 0);
+  };
 
   const boilers = [
     {
@@ -116,7 +168,12 @@ export default function Index() {
                 <Icon name="Package" size={20} className="mr-2" />
                 Каталог котлов
               </Button>
-              <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-gray-900">
+              <Button 
+                size="lg" 
+                variant="outline" 
+                className="border-white text-white hover:bg-white hover:text-gray-900"
+                onClick={() => setActiveSection('calculator')}
+              >
                 <Icon name="Calculator" size={20} className="mr-2" />
                 Подбор котла
               </Button>
@@ -269,9 +326,36 @@ export default function Index() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="flex items-center justify-between">
-                <span className="text-2xl font-bold text-primary">{boiler.price}</span>
-                <Button>Подробнее</Button>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-2xl font-bold text-primary">{boiler.price}</span>
+                  <Badge variant="secondary">{boiler.type}</Badge>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center">
+                    {[...Array(5)].map((_, i) => (
+                      <Icon 
+                        key={i} 
+                        name="Star" 
+                        size={14} 
+                        className={i < Math.floor(boiler.rating) ? "text-yellow-400" : "text-gray-300"} 
+                      />
+                    ))}
+                  </div>
+                  <span className="text-sm text-gray-600">({boiler.reviews})</span>
+                </div>
+                <div className="flex gap-2">
+                  <Button 
+                    className="flex-1"
+                    onClick={() => addToCart(boiler)}
+                  >
+                    <Icon name="ShoppingCart" size={16} className="mr-2" />
+                    В корзину
+                  </Button>
+                  <Button variant="outline" size="icon">
+                    <Icon name="Eye" size={16} />
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -614,6 +698,23 @@ export default function Index() {
             </nav>
             
             <div className="flex items-center gap-3">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setIsCartOpen(true)}
+                className="relative"
+              >
+                <Icon name="ShoppingCart" size={16} className="mr-2" />
+                Корзина
+                {getTotalItems() > 0 && (
+                  <Badge 
+                    className="absolute -top-2 -right-2 h-5 w-5 rounded-full flex items-center justify-center text-xs animate-bounce"
+                    variant="destructive"
+                  >
+                    {getTotalItems()}
+                  </Badge>
+                )}
+              </Button>
               <Button variant="outline" size="sm" onClick={() => setActiveSection('contacts')} className="hidden sm:flex">
                 <Icon name="Phone" size={16} className="mr-2" />
                 +7 (495) 123-45-67
@@ -713,6 +814,112 @@ export default function Index() {
           </div>
         </div>
       </footer>
+
+      {/* Cart Modal */}
+      {isCartOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 animate-fade-in">
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[80vh] overflow-hidden">
+            <div className="p-6 border-b flex items-center justify-between">
+              <h2 className="text-2xl font-bold">Корзина ({getTotalItems()})</h2>
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => setIsCartOpen(false)}
+              >
+                <Icon name="X" size={20} />
+              </Button>
+            </div>
+            
+            <div className="p-6 overflow-y-auto max-h-96">
+              {cart.length === 0 ? (
+                <div className="text-center py-8">
+                  <Icon name="ShoppingCart" size={48} className="mx-auto text-gray-400 mb-4" />
+                  <p className="text-gray-500">Корзина пуста</p>
+                  <Button 
+                    className="mt-4"
+                    onClick={() => {
+                      setIsCartOpen(false);
+                      setActiveSection('catalog');
+                    }}
+                  >
+                    Перейти в каталог
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {cart.map((item) => (
+                    <div key={item.id} className="flex items-center gap-4 p-4 border rounded-lg">
+                      <img 
+                        src={item.image} 
+                        alt={item.name}
+                        className="w-16 h-16 object-contain"
+                      />
+                      <div className="flex-1">
+                        <h3 className="font-medium">{item.name}</h3>
+                        <p className="text-gray-600">{item.price.toLocaleString()} ₽</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                        >
+                          <Icon name="Minus" size={14} />
+                        </Button>
+                        <span className="w-8 text-center">{item.quantity}</span>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                        >
+                          <Icon name="Plus" size={14} />
+                        </Button>
+                      </div>
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => removeFromCart(item.id)}
+                      >
+                        <Icon name="Trash2" size={16} />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            
+            {cart.length > 0 && (
+              <div className="p-6 border-t bg-gray-50">
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-lg font-semibold">Итого:</span>
+                  <span className="text-2xl font-bold text-primary">
+                    {getTotalPrice().toLocaleString()} ₽
+                  </span>
+                </div>
+                <div className="flex gap-3">
+                  <Button 
+                    variant="outline" 
+                    className="flex-1"
+                    onClick={() => setIsCartOpen(false)}
+                  >
+                    Продолжить покупки
+                  </Button>
+                  <Button 
+                    className="flex-1"
+                    onClick={() => {
+                      setIsCartOpen(false);
+                      setActiveSection('contacts');
+                    }}
+                  >
+                    <Icon name="CreditCard" size={16} className="mr-2" />
+                    Оформить заказ
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
